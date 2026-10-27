@@ -1,0 +1,26 @@
+{
+  "name": "quiz-live",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Lokalny quiz na żywo dla wielu graczy",
+  "scripts": {
+    "dev": "node --watch server.js",
+    "start": "node server.js",
+    "test": "node --test",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^22.15.30",
+    "@types/qrcode": "^1.5.5",
+    "socket.io-client": "^4.8.1",
+    "typescript": "^5.8.3"
+  }
+}

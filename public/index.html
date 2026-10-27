@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#201a46">
+    <meta name="description" content="Darmowy quiz na żywo dla znajomych, klasy i zespołu.">
+    <title>Quiz Live — graj razem</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="page-glow page-glow-one"></div>
+    <div class="page-glow page-glow-two"></div>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Quiz Live, strona główna">
+        <span class="brand-mark">Q</span>
+        <span>quiz<span class="brand-accent">live</span></span>
+      </a>
+      <div class="topbar-note"><span class="online-dot"></span> Graj razem, gdziekolwiek jesteście</div>
+    </header>
+    <main id="app" class="main-content" aria-live="polite"></main>
+    <div id="toast" class="toast" role="status" aria-live="assertive"></div>
+    <footer class="footer">Darmowa gra na żywo <span>·</span> Bez konta i bez instalacji</footer>
+  </body>
+</html>
