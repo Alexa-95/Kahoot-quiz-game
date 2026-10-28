@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import { generateQuestion, QUESTION_COUNTS } from '../src/question-generator.js';
 
 const question = {
-  text: 'Który ocean jest największy?',
-  options: ['Atlantycki', 'Indyjski', 'Arktyczny', 'Spokojny'],
+  text: 'Which is the largest ocean?',
+  options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'],
   correctIndex: 3
 };
 
 function responseFor(input, status = 200) {
   return new Response(JSON.stringify(status === 200
     ? { content: [{ type: 'tool_use', name: 'submit_question', input }] }
-    : { error: { message: 'Błąd testowy.' } }), {
+    : { error: { message: 'Test error.' } }), {
     status,
     headers: { 'content-type': 'application/json' }
   });
@@ -28,7 +28,7 @@ test('generates a validated question and randomizes the answer order', async (co
   /** @type {{ url: RequestInfo | URL, options: RequestInit } | undefined} */
   let request;
   const generated = await generateQuestion({
-    avoidQuestions: ['Jakie jest pytanie poprzedniej rundy?'],
+    avoidQuestions: ['What was the previous round question?'],
     fetchImpl: async (url, options) => {
       request = { url, options };
       return responseFor(question);
@@ -43,7 +43,8 @@ test('generates a validated question and randomizes the answer order', async (co
   assert.equal(request.url, 'https://api.anthropic.com/v1/messages');
   assert.equal(request.options.headers['x-api-key'], 'test-key');
   const body = JSON.parse(String(request.options.body));
-  assert.match(body.messages[0].content, /Jakie jest pytanie poprzedniej rundy/);
+  assert.match(body.messages[0].content, /in English/);
+  assert.match(body.messages[0].content, /What was the previous round question/);
 });
 
 test('requires a server-side API key and reports API failures', async (context) => {
@@ -57,7 +58,7 @@ test('requires a server-side API key and reports API failures', async (context) 
   process.env.ANTHROPIC_API_KEY = 'test-key';
   await assert.rejects(
     generateQuestion({ fetchImpl: async () => responseFor(null, 401) }),
-    /Anthropic API \(401\): Błąd testowy/
+    /Anthropic API error \(401\): Test error/
   );
 });
 
@@ -70,7 +71,7 @@ test('rejects malformed questions from the model', async (context) => {
   });
   await assert.rejects(
     generateQuestion({ fetchImpl: async () => responseFor({ ...question, correctIndex: 5 }) }),
-    /poza dozwolonym zakresem/
+    /outside the allowed limits/
   );
   assert.deepEqual(QUESTION_COUNTS, [5, 10, 15, 20, 25]);
 });

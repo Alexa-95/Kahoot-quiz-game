@@ -13,23 +13,22 @@ export default function HomeScreen({ roomFromUrl, onOpenBuilder, onJoin }) {
       <section className="hero">
         <div className="hero-copy">
           <span className="eyebrow">
-            <span className="sparkle">✦</span> Twoja ekipa. Jedna gra.
+            <span className="sparkle">✦</span> Your people. One game.
           </span>
           <h1>
-            Myśl szybko.
+            Think fast.
             <br />
-            <span>Graj razem.</span>
+            <span>Play together.</span>
           </h1>
           <p>
-            Stwórz quiz, zaproś znajomych i zobacz, kto zgarnie pierwsze
-            miejsce.
+            Create a quiz, invite your friends, and see who takes the top spot.
           </p>
           <div className="hero-points">
             <span>
-              <span className="check">✓</span> Działa na telefonie
+              <span className="check">✓</span> Works on phones
             </span>
             <span>
-              <span className="check">✓</span> Bez kont i aplikacji
+              <span className="check">✓</span> No account or app needed
             </span>
           </div>
         </div>
@@ -37,8 +36,8 @@ export default function HomeScreen({ roomFromUrl, onOpenBuilder, onJoin }) {
           <button className="host-card" onClick={onOpenBuilder} type="button">
             <span className="card-icon host-icon">✎</span>
             <span className="card-text">
-              <strong>Stwórz quiz</strong>
-              <small>Ty prowadzisz, inni grają</small>
+              <strong>Create a quiz</strong>
+              <small>You host, everyone else plays</small>
             </span>
             <span className="card-arrow">↗</span>
           </button>
@@ -46,41 +45,40 @@ export default function HomeScreen({ roomFromUrl, onOpenBuilder, onJoin }) {
             <div className="join-card-heading">
               <span className="card-icon join-icon">⌁</span>
               <span>
-                <strong>Dołącz do gry</strong>
-                <small>Masz kod od prowadzącego?</small>
+                <strong>Join a game</strong>
+                <small>Got a code from the host?</small>
               </span>
             </div>
             <label className="sr-only" htmlFor="room-code">
-              Kod pokoju
+              Room code
             </label>
             <input
               id="room-code"
               className="code-input"
               name="code"
-              placeholder="KOD GRY"
+              placeholder="GAME CODE"
               maxLength="5"
               autoComplete="one-time-code"
               defaultValue={roomFromUrl.toUpperCase()}
               required
             />
             <label className="sr-only" htmlFor="player-name">
-              Twój nick
+              Your name
             </label>
             <input
               id="player-name"
               className="name-input"
               name="name"
-              placeholder="Jak mamy Cię nazywać?"
+              placeholder="What should we call you?"
               maxLength="20"
               required
             />
             <button className="button button-primary full-width" type="submit">
-              Dołącz do gry <span>→</span>
+              Join game <span>→</span>
             </button>
           </form>
           <div className="home-footnote">
-            <span className="shield">◇</span> Pytania tworzy Claude w trakcie
-            gry.
+            <span className="shield">◇</span> Claude generates questions as you play.
           </div>
         </div>
       </section>
@@ -88,24 +86,24 @@ export default function HomeScreen({ roomFromUrl, onOpenBuilder, onJoin }) {
         <div>
           <span className="step-number">01</span>
           <div>
-            <strong>Wybierz liczbę pytań</strong>
-            <small>Claude tworzy je dla każdej gry.</small>
+            <strong>Choose the number of questions</strong>
+            <small>Claude creates new questions for every game.</small>
           </div>
         </div>
         <span className="step-connector"></span>
         <div>
           <span className="step-number">02</span>
           <div>
-            <strong>Udostępnij kod</strong>
-            <small>Znajomi dołączają z telefonu.</small>
+            <strong>Share the code</strong>
+            <small>Friends can join from their phones.</small>
           </div>
         </div>
         <span className="step-connector"></span>
         <div>
           <span className="step-number">03</span>
           <div>
-            <strong>Wygraj rundę</strong>
-            <small>Szybka odpowiedź = więcej punktów.</small>
+            <strong>Win the round</strong>
+            <small>Answer quickly to earn more points.</small>
           </div>
         </div>
       </section>

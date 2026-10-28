@@ -7,21 +7,21 @@ export default function BuilderScreen({ onBack, onCreate, isGenerating }) {
   return (
     <section className="builder-page">
       <button className="back-link" type="button" onClick={onBack}>
-        ← Wróć
+        ← Back
       </button>
       <div className="builder-header">
-        <span className="eyebrow">NOWA ROZGRYWKA</span>
+        <span className="eyebrow">NEW GAME</span>
         <h1>
-          Ty wybierasz <span>ile.</span>
+          You choose <span>how many.</span>
         </h1>
-        <p>Claude wymyśli nowe pytanie na każdą rundę.</p>
+        <p>Claude will generate a new question for each round.</p>
       </div>
       <form onSubmit={submit} className="builder-form">
         <label
           className="field-label question-count-label"
           htmlFor="question-count"
         >
-          Liczba pytań
+          Number of questions
           <select
             id="question-count"
             className="question-count-select"
@@ -31,7 +31,7 @@ export default function BuilderScreen({ onBack, onCreate, isGenerating }) {
           >
             {[5, 10, 15, 20, 25].map((count) => (
               <option value={count} key={count}>
-                {count} pytań
+                {count} questions
               </option>
             ))}
           </select>
@@ -39,22 +39,22 @@ export default function BuilderScreen({ onBack, onCreate, isGenerating }) {
         <div className="random-quiz-note">
           <span className="sparkle">✦</span>
           <span>
-            <strong>Każda gra jest inna</strong>
-            <small>Nowe pytania z różnych dziedzin, bez powtórek.</small>
+            <strong>Every game is different</strong>
+            <small>Fresh questions from different topics, with no repeats.</small>
           </span>
         </div>
         <div className="builder-submit">
-          <span>Do utworzenia quizu potrzebne jest połączenie z Claude.</span>
+          <span>A connection to Claude is required to create a quiz.</span>
           <button
             className="button button-primary"
             type="submit"
             disabled={isGenerating}
           >
             {isGenerating ? (
-              "Claude tworzy pytanie…"
+              "Claude is generating a question…"
             ) : (
               <>
-                Stwórz quiz <span>→</span>
+                Create quiz <span>→</span>
               </>
             )}
           </button>

@@ -15,9 +15,7 @@ export async function generateQuestion({
 } = {}) {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey)
-    throw new Error(
-      "Brakuje klucza API. Ustaw zmienną środowiskową ANTHROPIC_API_KEY.",
-    );
+    throw new Error("Missing API key. Set the ANTHROPIC_API_KEY environment variable.");
 
   const response = await fetchImpl(API_URL, {
     method: "POST",
@@ -33,7 +31,7 @@ export async function generateQuestion({
       tools: [
         {
           name: "submit_question",
-          description: "Zwróć jedno pytanie quizowe wraz z odpowiedziami.",
+          description: "Return one quiz question with its answer options.",
           input_schema: {
             type: "object",
             properties: {
@@ -56,12 +54,12 @@ export async function generateQuestion({
         {
           role: "user",
           content: [
-            "Wymyśl jedno krótkie, jednoznaczne pytanie quizowe z wiedzy ogólnej po polsku.",
-            "Wybierz losowo temat, np. nauka, geografia, historia, kultura, przyroda lub sport.",
-            "Podaj dokładnie cztery krótkie odpowiedzi i poprawny indeks odpowiedzi od 0 do 3.",
-            "Nie powtarzaj ani nie parafrazuj żadnego z wcześniejszych pytań.",
+            "Create one short, unambiguous general-knowledge quiz question in English.",
+            "Choose a topic at random, such as science, geography, history, culture, nature, or sports.",
+            "Provide exactly four short answer options and the index of the correct answer from 0 to 3.",
+            "Do not repeat or paraphrase any earlier question.",
             avoidQuestions.length
-              ? `Wcześniejsze pytania w tej grze:\n${avoidQuestions.map((question) => `- ${question}`).join("\n")}`
+              ? `Earlier questions in this game:\n${avoidQuestions.map((question) => `- ${question}`).join("\n")}`
               : "",
           ]
             .filter(Boolean)
@@ -76,7 +74,7 @@ export async function generateQuestion({
   if (!response.ok) {
     const message = result?.error?.message;
     throw new Error(
-      `Błąd Anthropic API (${response.status})${message ? `: ${message}` : "."}`,
+      `Anthropic API error (${response.status})${message ? `: ${message}` : "."}`,
     );
   }
 
@@ -94,7 +92,7 @@ export async function generateQuestion({
     question.options.length !== 4 ||
     question.options.some((option) => typeof option !== "string")
   ) {
-    throw new Error("Claude zwrócił pytanie w nieprawidłowym formacie.");
+    throw new Error("Claude returned a question in an invalid format.");
   }
 
   const text = question.text.trim();
@@ -107,7 +105,7 @@ export async function generateQuestion({
     question.correctIndex < 0 ||
     question.correctIndex > 3
   ) {
-    throw new Error("Claude zwrócił pytanie poza dozwolonym zakresem.");
+    throw new Error("Claude returned a question outside the allowed limits.");
   }
 
   const shuffledOptions = [...options];

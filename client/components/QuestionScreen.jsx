@@ -30,20 +30,20 @@ export default function QuestionScreen({
           </span>
         </a>
         <span className="game-room-code">
-          POKÓJ <strong>{room.code}</strong>
+          ROOM <strong>{room.code}</strong>
         </span>
         <span className="question-progress">
-          PYTANIE {room.currentIndex + 1} <span>/ {room.totalQuestions}</span>
+          QUESTION {room.currentIndex + 1} <span>/ {room.totalQuestions}</span>
         </span>
       </div>
       <div className="game-summary">
         <span className="eyebrow">{room.title}</span>
         <span>
           {isHost
-            ? `${room.playersAnswered} / ${room.playerCount} odpowiedzi`
+            ? `${room.playersAnswered} / ${room.playerCount} answers`
             : room.hasAnswered
-              ? "Odpowiedź zapisana!"
-              : "Wybierz odpowiedź"}
+              ? "Answer recorded!"
+              : "Choose an answer"}
         </span>
       </div>
       <div className="timer-bar">
@@ -62,7 +62,7 @@ export default function QuestionScreen({
         <h1>{question.text}</h1>
         {isHost && (
           <p className="game-instruction">
-            Gracze wybierają odpowiedź na swoich telefonach
+            Players choose answers on their phones
           </p>
         )}
         <div className="answer-grid">
@@ -83,7 +83,7 @@ export default function QuestionScreen({
                   <button
                     onClick={() => onAnswer(index)}
                     type="button"
-                    aria-label={`Odpowiedź: ${option}`}
+                    aria-label={`Answer: ${option}`}
                     disabled={room.hasAnswered}
                   />
                 )}
@@ -96,7 +96,7 @@ export default function QuestionScreen({
             <div className="reveal-panel">
               <span className="reveal-icon">✦</span>
               <div>
-                <strong>Prawidłowa odpowiedź</strong>
+                <strong>Correct answer</strong>
                 <p>{question.options[question.correctIndex]}</p>
               </div>
             </div>
@@ -110,16 +110,16 @@ export default function QuestionScreen({
                   disabled={isGenerating}
                 >
                   {isGenerating ? (
-                    "Claude tworzy pytanie…"
+                    "Claude is generating a question…"
                   ) : (
                     <>
-                      Dalej <span>→</span>
+                      Next <span>→</span>
                     </>
                   )}
                 </button>
               ) : (
                 <span className="waiting-next">
-                  Czekamy na kolejne pytanie…
+                  Waiting for the next question…
                 </span>
               )}
             </div>
@@ -128,7 +128,7 @@ export default function QuestionScreen({
           !isHost &&
           room.hasAnswered && (
             <div className="answer-sent">
-              <span>✓</span> Dobra robota! Odpowiedź zapisana.
+              <span>✓</span> Nice work! Your answer has been recorded.
             </div>
           )
         )}
@@ -140,12 +140,12 @@ export default function QuestionScreen({
 function RankingPreview({ room }) {
   return (
     <div className="round-ranking">
-      <span>RANKING</span>
+      <span>LEADERBOARD</span>
       {room.ranking.slice(0, 3).map((player, index) => (
         <div key={player.name}>
           <span className="rank-medal">{["🥇", "🥈", "🥉"][index]}</span>
           <strong>{player.name}</strong>
-          <small>{player.score} pkt</small>
+          <small>{player.score} pts</small>
         </div>
       ))}
     </div>

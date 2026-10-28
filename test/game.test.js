@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import { GameManager } from '../src/game.js';
 
 const quiz = {
-  title: 'Quiz testowy',
+  title: 'Test Quiz',
   questions: [
-    { text: 'Pytanie numer jeden?', type: 'choice', options: ['Dobra', 'Zła'], correctIndex: 0 },
-    { text: 'Pytanie numer dwa?', type: 'true_false', options: ['Prawda', 'Fałsz'], correctIndex: 1 }
+    { text: 'Question number one?', type: 'choice', options: ['Right', 'Wrong'], correctIndex: 0 },
+    { text: 'Question number two?', type: 'true_false', options: ['True', 'False'], correctIndex: 1 }
   ]
 };
 
@@ -27,7 +27,7 @@ test('creates a room and rejects malformed quizzes', () => {
   const room = game.createRoom('host-socket', quiz);
   assert.equal(room.code, 'ABC23');
   assert.equal(room.phase, 'lobby');
-  assert.throws(() => game.createRoom('host-2', { title: 'No', questions: [] }), /od 1 do 25 pytań/);
+  assert.throws(() => game.createRoom('host-2', { title: 'No', questions: [] }), /between 1 and 25 questions/);
 });
 
 test('players join once, and duplicate nicknames are rejected', () => {
@@ -36,7 +36,7 @@ test('players join once, and duplicate nicknames are rejected', () => {
   const first = game.joinPlayer(room.code, 'Ola', undefined, 'player-socket');
   assert.equal(first.resumed, false);
   assert.equal(game.joinPlayer(room.code, 'Ola', first.player.token, 'new-socket').resumed, true);
-  assert.throws(() => game.joinPlayer(room.code, 'ola', undefined, 'other-socket'), /nick jest już zajęty/);
+  assert.throws(() => game.joinPlayer(room.code, 'ola', undefined, 'other-socket'), /already taken/);
 });
 
 test('answers are private until reveal and score depends on response speed', () => {
@@ -60,9 +60,9 @@ test('prevents duplicate and late answers and verifies host authorization', () =
   const room = game.createRoom('host-socket', quiz);
   const player = game.joinPlayer(room.code, 'Ola', undefined, 'player-socket').player;
   game.startRoom(room.code, 'host-socket');
-  assert.throws(() => game.startRoom(room.code, 'other-socket'), /Tylko prowadzący/);
+  assert.throws(() => game.startRoom(room.code, 'other-socket'), /Only the host/);
   game.answer(room.code, 'player-socket', player.token, 0);
-  assert.throws(() => game.answer(room.code, 'player-socket', player.token, 0), /już wysłana/);
+  assert.throws(() => game.answer(room.code, 'player-socket', player.token, 0), /already been submitted/);
   advanceTime(15_000);
   const lateAnswer = game.answer(room.code, 'player-socket', player.token, 0);
   assert.equal(lateAnswer.expired, true);
@@ -90,13 +90,13 @@ test('supports reconnecting a player and completing the quiz', () => {
 
 test('generates one validated question at a time without repeating or exposing answers', () => {
   const { game } = createGame();
-  const room = game.createRoom('host-socket', { title: 'Quiz testowy', questions: [quiz.questions[0]] }, 5);
+  const room = game.createRoom('host-socket', { title: 'Test Quiz', questions: [quiz.questions[0]] }, 5);
   const player = game.joinPlayer(room.code, 'Ola', undefined, 'player-socket').player;
   assert.equal(game.view(room.code, undefined).totalQuestions, 5);
   game.startRoom(room.code, 'host-socket');
   game.reveal(room.code);
-  assert.throws(() => game.nextQuestion(room.code, 'host-socket'), /nie zostało jeszcze wygenerowane/);
-  assert.throws(() => game.addNextQuestion(room.code, 'host-socket', quiz.questions[0]), /powtarza się/);
+  assert.throws(() => game.nextQuestion(room.code, 'host-socket'), /not been generated yet/);
+  assert.throws(() => game.addNextQuestion(room.code, 'host-socket', quiz.questions[0]), /already appeared/);
   assert.equal(room.questions.length, 1);
   const next = game.addNextQuestion(room.code, 'host-socket', quiz.questions[1]);
   assert.equal(next.currentIndex, 1);

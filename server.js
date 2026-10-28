@@ -19,7 +19,7 @@ const generatingQuestions = new Set();
 app.get('/api/qr/:code', async (request, response) => {
   const code = request.params.code.toUpperCase();
   if (!game.getRoom(code)) {
-    response.status(404).json({ error: 'Pokój już nie istnieje.' });
+    response.status(404).json({ error: 'This room no longer exists.' });
     return;
   }
   try {
@@ -27,8 +27,8 @@ app.get('/api/qr/:code', async (request, response) => {
     const image = await QRCode.toBuffer(roomUrl, { width: 220, margin: 1, color: { dark: '#15132b', light: '#ffffff' } });
     response.type('png').send(image);
   } catch (error) {
-    console.error('Nie udało się wygenerować kodu QR:', error);
-    response.status(500).json({ error: 'Nie udało się wygenerować kodu QR.' });
+    console.error('Failed to generate QR code:', error);
+    response.status(500).json({ error: 'Failed to generate QR code.' });
   }
 });
 
@@ -36,11 +36,11 @@ io.on('connection', (socket) => {
   socket.on('host:create', async (payload, acknowledge) => {
     try {
       if (!QUESTION_COUNTS.includes(payload?.questionCount)) {
-        throw new Error(`Wybierz liczbę pytań: ${QUESTION_COUNTS.join(', ')}.`);
+        throw new Error(`Choose a question count: ${QUESTION_COUNTS.join(', ')}.`);
       }
       const question = await generateQuestion();
-      if (!socket.connected) throw new Error('Połączenie z prowadzącym zostało przerwane.');
-      const room = game.createRoom(socket.id, { title: 'Quiz z Claude', questions: [question] }, payload.questionCount);
+      if (!socket.connected) throw new Error('The host connection was interrupted.');
+      const room = game.createRoom(socket.id, { title: 'Quiz with Claude', questions: [question] }, payload.questionCount);
       socket.join(room.code);
       socket.data.role = 'host';
       socket.data.roomCode = room.code;
@@ -110,7 +110,7 @@ io.on('connection', (socket) => {
         clearQuestionTimer(payload.code);
         publish(game.requireRoom(payload.code));
       }
-      acknowledge?.({ ok: result.accepted, error: result.accepted ? undefined : 'Czas na odpowiedź minął.' });
+      acknowledge?.({ ok: result.accepted, error: result.accepted ? undefined : 'Time ran out.' });
       if (result.accepted) publish(game.requireRoom(payload.code));
     } catch (error) {
       acknowledge?.({ ok: false, error: errorMessage(error) });
@@ -122,7 +122,7 @@ io.on('connection', (socket) => {
     let generating = false;
     try {
       const currentRoom = game.requireHost(code, socket.id);
-      if (currentRoom.phase !== 'reveal') throw new Error('Poczekaj na zakończenie pytania.');
+      if (currentRoom.phase !== 'reveal') throw new Error('Wait for the question to end.');
       if (currentRoom.currentIndex === currentRoom.totalQuestions - 1) {
         const room = game.nextQuestion(code, socket.id);
         clearQuestionTimer(room.code);
@@ -130,7 +130,7 @@ io.on('connection', (socket) => {
         publish(room);
         return;
       }
-      if (generatingQuestions.has(code)) throw new Error('Pytanie jest już generowane.');
+      if (generatingQuestions.has(code)) throw new Error('A question is already being generated.');
       generatingQuestions.add(code);
       generating = true;
       const roomSnapshot = currentRoom;
@@ -139,7 +139,7 @@ io.on('connection', (socket) => {
         avoidQuestions: currentRoom.questions.map((existingQuestion) => existingQuestion.text)
       });
       if (game.requireHost(code, socket.id) !== roomSnapshot || roomSnapshot.currentIndex !== questionIndex) {
-        throw new Error('Stan quizu zmienił się podczas generowania pytania. Spróbuj ponownie.');
+        throw new Error('The quiz changed while the question was being generated. Please try again.');
       }
       const room = game.addNextQuestion(code, socket.id, question);
       if (room.phase === 'question') scheduleReveal(room);
@@ -207,7 +207,7 @@ function resolveRoomOrigin(request) {
     const localAddress = Object.values(networkInterfaces())
       .flat()
       .find((address) => address && !address.internal && address.family === 'IPv4');
-    if (!localAddress) throw new Error('Nie znaleziono lokalnego adresu IPv4. Ustaw PUBLIC_URL.');
+    if (!localAddress) throw new Error('Could not find a local IPv4 address. Set PUBLIC_URL.');
     const port = request.socket.localPort;
     return `${request.protocol}://${localAddress.address}${port ? `:${port}` : ''}`;
   }
@@ -234,7 +234,7 @@ function clearQuestionTimer(code) {
 
 /** @param {unknown} error */
 function errorMessage(error) {
-  return error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd.';
+  return error instanceof Error ? error.message : 'An unexpected error occurred.';
 }
 
 if (process.env.NODE_ENV === 'development') {
@@ -253,7 +253,7 @@ if (process.env.NODE_ENV === 'development'
   || (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)))) {
   const port = Number(process.env.PORT) || 3000;
   httpServer.listen(port, '0.0.0.0', () => {
-    console.log(`Quiz Live działa: http://localhost:${port}`);
-    console.log('Aby dołączyć z telefonu w tej samej sieci Wi-Fi, otwórz adres IP tego komputera.');
+    console.log(`Quiz Live is running at http://localhost:${port}`);
+    console.log('To join from a phone on the same Wi-Fi network, open this computer’s IP address.');
   });
 }

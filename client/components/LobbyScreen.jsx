@@ -9,9 +9,9 @@ export default function LobbyScreen({
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(room.code);
-      onToast("Kod pokoju skopiowany.");
+      onToast("Room code copied.");
     } catch {
-      onToast(`Kod pokoju: ${room.code}`);
+      onToast(`Room code: ${room.code}`);
     }
   };
 
@@ -20,10 +20,10 @@ export default function LobbyScreen({
       <div className="lobby-top">
         <span className="eyebrow">
           <span className="online-dot"></span>{" "}
-          {isHost ? "POKÓJ GOTOWY" : "DOŁĄCZONO DO GRY"}
+          {isHost ? "ROOM READY" : "JOINED GAME"}
         </span>
         <button className="back-link" onClick={onLeave} type="button">
-          Opuść pokój
+          Leave room
         </button>
       </div>
       <div className="lobby-layout">
@@ -32,27 +32,27 @@ export default function LobbyScreen({
           <h1>{room.title}</h1>
           <p>
             {isHost
-              ? "Pokaż kod ekipie. Gdy wszyscy będą gotowi — startujemy!"
-              : "Czekasz na prowadzącego. Za chwilę zaczynamy!"}
+              ? "Share the code with everyone. We'll start when they're ready!"
+              : "Waiting for the host. The game will start soon!"}
           </p>
           {isHost ? (
             <>
               <div className="room-code-card">
-                <span>KOD DOŁĄCZENIA</span>
+                <span>JOIN CODE</span>
                 <strong>{room.code}</strong>
                 <button className="copy-code" onClick={copyCode} type="button">
-                  Kopiuj kod
+                  Copy code
                 </button>
               </div>
               <div className="qr-card">
                 <img
                   className="qr-image"
-                  alt="Kod QR do dołączenia do pokoju"
+                  alt="QR code to join the room"
                   src={`/api/qr/${encodeURIComponent(room.code)}`}
                 />
                 <span>
-                  <strong>Zeskanuj i dołącz</strong>
-                  <small>Otwórz aparat w telefonie</small>
+                  <strong>Scan to join</strong>
+                  <small>Open your phone's camera</small>
                 </span>
               </div>
               <button
@@ -61,26 +61,26 @@ export default function LobbyScreen({
                 type="button"
                 disabled={players.length === 0}
               >
-                Rozpocznij quiz <span>→</span>
+                Start quiz <span>→</span>
               </button>
             </>
           ) : (
             <div className="waiting-pulse">
               <span className="pulse-ring"></span>
-              <span>Jesteś na liście graczy</span>
+              <span>You're on the player list</span>
             </div>
           )}
           <div className="lobby-meta">
-            <span>{room.totalQuestions} pytań</span>
+            <span>{room.totalQuestions} questions</span>
             <span>·</span>
-            <span>15 sekund na odpowiedź</span>
+            <span>15 seconds to answer</span>
           </div>
         </div>
         <aside className="players-panel">
           <div className="players-title">
             <div>
-              <h2>Gracze</h2>
-              <p>Ekipa w pokoju</p>
+              <h2>Players</h2>
+              <p>Your game crew</p>
             </div>
             <span className="player-count">{players.length}</span>
           </div>
@@ -99,8 +99,8 @@ export default function LobbyScreen({
           ) : (
             <div className="empty-players">
               <span>♧</span>
-              <strong>Tu zaraz będzie tłoczno</strong>
-              <small>Udostępnij kod i poczekaj na graczy.</small>
+              <strong>It's quiet in here… for now</strong>
+              <small>Share the code and wait for players to join.</small>
             </div>
           )}
         </aside>

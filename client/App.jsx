@@ -41,12 +41,12 @@ export default function App() {
   const emit = useCallback((event, payload) => new Promise((resolve) => {
     socket.timeout(35_000).emit(event, payload, (timeoutError, response) => {
       if (timeoutError) {
-        showToast('Serwer nie odpowiedział na czas. Spróbuj ponownie.');
+        showToast('The server timed out. Please try again.');
         resolve(null);
         return;
       }
       if (!response?.ok) {
-        showToast(response?.error || 'Nie udało się wykonać tej akcji.');
+        showToast(response?.error || 'This action could not be completed.');
         resolve(null);
         return;
       }
@@ -71,15 +71,15 @@ export default function App() {
         : { code: currentIdentity.code, playerToken: currentIdentity.token };
       if (!await emit(event, payload)) returnHome();
     };
-    const onDisconnect = () => showToast('Połączenie przerwane. Próbujemy połączyć ponownie…');
-    const onConnectError = () => showToast('Nie można połączyć z serwerem. Sprawdź połączenie internetowe.');
+    const onDisconnect = () => showToast('Connection lost. Trying to reconnect…');
+    const onConnectError = () => showToast('Could not connect to the server. Check your internet connection.');
     const onRoomState = (state) => {
       setRoomState(state);
       window.history.replaceState(null, '', `/?room=${encodeURIComponent(state.code)}`);
     };
     const onRoomClosed = () => {
       returnHome();
-      showToast('Prowadzący zamknął pokój.');
+      showToast('The host closed the room.');
     };
 
     socket.on('connect', resumeRoom);
@@ -171,14 +171,14 @@ export default function App() {
 
   return <>
     <header className="topbar">
-      <a className="brand" href="/" aria-label="Quiz Live, strona główna">
+      <a className="brand" href="/" aria-label="Quiz Live home">
         <span className="brand-mark">Q</span>
         <span>quiz<span className="brand-accent">live</span></span>
       </a>
-      <div className="topbar-note"><span className="online-dot"></span> Graj razem, gdziekolwiek jesteście</div>
+      <div className="topbar-note"><span className="online-dot"></span> Play together, wherever you are</div>
     </header>
     <main className="main-content" aria-live="polite">{screen}</main>
     <div className={`toast ${toast ? 'visible' : ''}`} role="status" aria-live="assertive">{toast}</div>
-    <footer className="footer">Darmowa gra na żywo <span>·</span> Bez konta i bez instalacji</footer>
+    <footer className="footer">Free live quiz <span>·</span> No account or installation needed</footer>
   </>;
 }

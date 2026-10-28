@@ -33,8 +33,8 @@ async function withFakeClaude(action) {
         type: 'tool_use',
         name: 'submit_question',
         input: {
-          text: `Wygenerowane pytanie numer ${++fakeQuestionNumber}?`,
-          options: ['Pierwsza', 'Druga', 'Trzecia', 'Czwarta'],
+          text: `Generated question number ${++fakeQuestionNumber}?`,
+          options: ['First', 'Second', 'Third', 'Fourth'],
           correctIndex: 2
         }
       }]
@@ -51,7 +51,7 @@ async function withFakeClaude(action) {
 test('host and player stay in sync over Socket.IO without leaking answers', async (context) => {
   await new Promise((resolve) => httpServer.listen(0, '127.0.0.1', 1, () => resolve()));
   const address = httpServer.address();
-  if (!address || typeof address === 'string') throw new Error('Nie udało się uruchomić testowego serwera.');
+  if (!address || typeof address === 'string') throw new Error('Failed to start the test server.');
   const host = createSocket(`http://127.0.0.1:${address.port}`);
   const player = createSocket(`http://127.0.0.1:${address.port}`);
   let roomCode;
@@ -77,7 +77,7 @@ test('host and player stay in sync over Socket.IO without leaking answers', asyn
   assert.deepEqual([...new Uint8Array(await qrResponse.arrayBuffer()).slice(0, 8)], [137, 80, 78, 71, 13, 10, 26, 10]);
 
   const initialPlayerState = waitForRoomState(player, (state) => state.phase === 'lobby' && state.playerCount === 1);
-  const joined = await emitWithAck(player, 'player:join', { code: created.code, name: 'Ola' });
+  const joined = await emitWithAck(player, 'player:join', { code: created.code, name: 'Alex' });
   assert.equal(joined.ok, true);
   await initialPlayerState;
 

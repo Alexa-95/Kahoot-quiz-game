@@ -43,12 +43,12 @@ export class GameManager {
       totalQuestions < normalized.questions.length ||
       totalQuestions > 25
     ) {
-      throw new Error("Liczba pytań w quizie jest nieprawidłowa.");
+      throw new Error("The number of questions in the quiz is invalid.");
     }
     let code = this.codeFactory();
     for (let attempts = 0; this.rooms.has(code); attempts += 1) {
       if (attempts >= 10)
-        throw new Error("Nie udało się utworzyć unikalnego kodu pokoju.");
+        throw new Error("Could not generate a unique room code.");
       code = this.codeFactory();
     }
 
@@ -80,7 +80,7 @@ export class GameManager {
   resumeHost(code, hostToken, socketId) {
     const room = this.requireRoom(code);
     if (room.hostToken !== hostToken)
-      throw new Error("Nie można wznowić tego pokoju.");
+      throw new Error("Unable to resume this room.");
     room.hostSocketId = socketId;
     return room;
   }
@@ -98,15 +98,15 @@ export class GameManager {
       }
     }
     if (room.phase !== "lobby")
-      throw new Error("Quiz już trwa — nie można dołączyć do tego pokoju.");
-    if (room.players.size >= MAX_PLAYERS) throw new Error("Pokój jest pełny.");
+      throw new Error("The quiz is already in progress. You cannot join this room.");
+    if (room.players.size >= MAX_PLAYERS) throw new Error("This room is full.");
     if (
       [...room.players.values()].some(
         (player) =>
           player.name.toLocaleLowerCase() === cleanName.toLocaleLowerCase(),
       )
     ) {
-      throw new Error("Ten nick jest już zajęty. Wybierz inny.");
+      throw new Error("That name is already taken. Choose another.");
     }
 
     const token = this.tokenFactory();
@@ -128,7 +128,7 @@ export class GameManager {
   resumePlayer(code, playerToken, socketId) {
     const room = this.requireRoom(code);
     const player = room.players.get(playerToken);
-    if (!player) throw new Error("Nie znaleziono gracza do wznowienia.");
+    if (!player) throw new Error("Player to resume was not found.");
     player.socketId = socketId;
     player.connected = true;
     return { room, player };
@@ -137,9 +137,9 @@ export class GameManager {
   /** @param {string} code @param {string} socketId */
   startRoom(code, socketId) {
     const room = this.requireHost(code, socketId);
-    if (room.phase !== "lobby") throw new Error("Quiz został już rozpoczęty.");
+    if (room.phase !== "lobby") throw new Error("The quiz has already started.");
     if (room.players.size === 0)
-      throw new Error("Dołącz do pokoju jako gracz, zanim rozpoczniesz quiz.");
+      throw new Error("Join the room as a player before starting the quiz.");
     room.currentIndex = 0;
     room.phase = "question";
     room.questionId = `${room.code}-${this.now()}-${room.currentIndex}`;
@@ -152,21 +152,21 @@ export class GameManager {
     const room = this.requireRoom(code);
     const player = room.players.get(playerToken);
     if (!player || player.socketId !== socketId || !player.connected)
-      throw new Error("Nie należysz do tego pokoju.");
+      throw new Error("You are not a member of this room.");
     if (room.phase !== "question")
-      throw new Error("To pytanie nie przyjmuje już odpowiedzi.");
+      throw new Error("This question is no longer accepting answers.");
     if (typeof answerIndex !== "number" || !Number.isInteger(answerIndex))
-      throw new Error("Wybierz prawidłową odpowiedź.");
+      throw new Error("Choose a valid answer.");
     if (this.now() >= room.endsAt) {
       this.reveal(room.code);
       return { accepted: false, expired: true, correct: false, points: 0 };
     }
     if (player.answerQuestionId === room.questionId)
-      throw new Error("Odpowiedź została już wysłana.");
+      throw new Error("Your answer has already been submitted.");
 
     const question = room.questions[room.currentIndex];
     if (answerIndex < 0 || answerIndex >= question.options.length)
-      throw new Error("Wybierz prawidłową odpowiedź.");
+      throw new Error("Choose a valid answer.");
     const correct = answerIndex === question.correctIndex;
     let points = 0;
     if (correct) {
@@ -195,14 +195,14 @@ export class GameManager {
   nextQuestion(code, socketId) {
     const room = this.requireHost(code, socketId);
     if (room.phase !== "reveal")
-      throw new Error("Poczekaj na zakończenie pytania.");
+      throw new Error("Wait for the question to end.");
     if (room.currentIndex === room.totalQuestions - 1) {
       room.phase = "finished";
       room.questionId = null;
       return room;
     }
     if (room.questions.length <= room.currentIndex + 1) {
-      throw new Error("Następne pytanie nie zostało jeszcze wygenerowane.");
+      throw new Error("The next question has not been generated yet.");
     }
     room.currentIndex += 1;
     room.questionId = `${room.code}-${this.now()}-${room.currentIndex}`;
@@ -219,11 +219,11 @@ export class GameManager {
   addNextQuestion(code, socketId, question) {
     const room = this.requireHost(code, socketId);
     if (room.phase !== "reveal")
-      throw new Error("Poczekaj na zakończenie pytania.");
+      throw new Error("Wait for the question to end.");
     if (room.currentIndex >= room.totalQuestions - 1)
-      throw new Error("Quiz jest już zakończony.");
+      throw new Error("The quiz is already finished.");
     if (room.questions.length !== room.currentIndex + 1)
-      throw new Error("Następne pytanie zostało już przygotowane.");
+      throw new Error("The next question has already been prepared.");
     const normalized = validateQuiz({
       title: room.title,
       questions: [question],
@@ -235,7 +235,7 @@ export class GameManager {
           normalized.text.toLocaleLowerCase(),
       )
     ) {
-      throw new Error("Pytanie powtarza się w tym quizie. Wygeneruj inne.");
+      throw new Error("This question has already appeared in the quiz. Generate another.");
     }
     room.questions.push(normalized);
     return this.nextQuestion(code, socketId);
@@ -259,13 +259,13 @@ export class GameManager {
     const room = this.requireRoom(code);
     if (role === "host") {
       if (room.hostSocketId !== socketId)
-        throw new Error("Tylko prowadzący może zamknąć pokój.");
+        throw new Error("Only the host can close the room.");
       this.removeRoom(room);
       return { room, closed: true };
     }
     const player = playerToken ? room.players.get(playerToken) : undefined;
     if (!player || player.socketId !== socketId)
-      throw new Error("Nie należysz do tego pokoju.");
+      throw new Error("You are not a member of this room.");
     player.connected = false;
     player.socketId = null;
     return { room, closed: false };
@@ -329,7 +329,7 @@ export class GameManager {
   requireRoom(code) {
     const room = this.getRoom(code);
     if (!room)
-      throw new Error("Nie znaleziono pokoju. Sprawdź kod i spróbuj ponownie.");
+      throw new Error("Room not found. Check the code and try again.");
     return room;
   }
 
@@ -337,7 +337,7 @@ export class GameManager {
   requireHost(code, socketId) {
     const room = this.requireRoom(code);
     if (room.hostSocketId !== socketId)
-      throw new Error("Tylko prowadzący może wykonać tę akcję.");
+      throw new Error("Only the host can perform this action.");
     return room;
   }
 }
@@ -345,25 +345,25 @@ export class GameManager {
 /** @param {unknown} quiz */
 /** @param {unknown} quiz @returns {{ title: string, questions: QuizQuestion[] }} */
 function validateQuiz(quiz) {
-  if (!quiz || typeof quiz !== "object") throw new Error("Podaj treść quizu.");
+  if (!quiz || typeof quiz !== "object") throw new Error("Provide quiz content.");
   const input = /** @type {{ title?: unknown, questions?: unknown }} */ (quiz);
   if (
     typeof input.title !== "string" ||
     input.title.trim().length < 2 ||
     input.title.trim().length > 60
   ) {
-    throw new Error("Tytuł quizu musi mieć od 2 do 60 znaków.");
+    throw new Error("The quiz title must be between 2 and 60 characters.");
   }
   if (
     !Array.isArray(input.questions) ||
     input.questions.length < 1 ||
     input.questions.length > 25
   ) {
-    throw new Error("Quiz musi zawierać od 1 do 25 pytań.");
+    throw new Error("The quiz must contain between 1 and 25 questions.");
   }
   const questions = input.questions.map((rawQuestion, index) => {
     if (!rawQuestion || typeof rawQuestion !== "object")
-      throw new Error(`Pytanie ${index + 1} jest nieprawidłowe.`);
+      throw new Error(`Question ${index + 1} is invalid.`);
     const question =
       /** @type {{ text?: unknown, type?: unknown, options?: unknown, correctIndex?: unknown }} */ (
         rawQuestion
@@ -373,12 +373,12 @@ function validateQuiz(quiz) {
       question.text.trim().length < 5 ||
       question.text.trim().length > 160
     ) {
-      throw new Error(`Pytanie ${index + 1} musi mieć od 5 do 160 znaków.`);
+      throw new Error(`Question ${index + 1} must be between 5 and 160 characters.`);
     }
     if (question.type !== "choice" && question.type !== "true_false")
-      throw new Error(`Nieobsługiwany typ pytania ${index + 1}.`);
+      throw new Error(`Unsupported question type for question ${index + 1}.`);
     const options =
-      question.type === "true_false" ? ["Prawda", "Fałsz"] : question.options;
+      question.type === "true_false" ? ["True", "False"] : question.options;
     if (
       !Array.isArray(options) ||
       options.length < 2 ||
@@ -391,7 +391,7 @@ function validateQuiz(quiz) {
       )
     ) {
       throw new Error(
-        `Odpowiedzi w pytaniu ${index + 1} muszą mieć od 1 do 50 znaków.`,
+        `Answers for question ${index + 1} must be between 1 and 50 characters.`,
       );
     }
     if (
@@ -400,7 +400,7 @@ function validateQuiz(quiz) {
       question.correctIndex < 0 ||
       question.correctIndex >= options.length
     ) {
-      throw new Error(`Wskaż prawidłową odpowiedź w pytaniu ${index + 1}.`);
+      throw new Error(`Select the correct answer for question ${index + 1}.`);
     }
     return {
       text: question.text.trim(),
@@ -414,10 +414,10 @@ function validateQuiz(quiz) {
 
 /** @param {unknown} value */
 function validateName(value) {
-  if (typeof value !== "string") throw new Error("Wpisz swój nick.");
+  if (typeof value !== "string") throw new Error("Enter your name.");
   const name = value.trim();
   if (name.length < 2 || name.length > 20)
-    throw new Error("Nick musi mieć od 2 do 20 znaków.");
+    throw new Error("Your name must be between 2 and 20 characters.");
   return name;
 }
 

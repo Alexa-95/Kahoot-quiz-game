@@ -6,13 +6,13 @@ export default function FinishedScreen({ room, onHome }) {
       <div className="confetti confetti-one"></div>
       <div className="confetti confetti-two"></div>
       <span className="eyebrow">
-        <span className="sparkle">✦</span> TO BYŁA DOBRA GRA
+        <span className="sparkle">✦</span> THAT WAS A GREAT GAME
       </span>
       <h1>
-        Quiz <span>ukończony!</span>
+        Quiz <span>complete!</span>
       </h1>
       <p>
-        {room.title} · {room.totalQuestions} pytań · {room.playerCount} graczy
+        {room.title} · {room.totalQuestions} questions · {room.playerCount} players
       </p>
       {winner && (
         <div className="winner-card">
@@ -22,15 +22,15 @@ export default function FinishedScreen({ room, onHome }) {
           </span>
           <span className="winner-name">{winner.name}</span>
           <span className="winner-score">
-            {winner.score} <small>pkt</small>
+            {winner.score} <small>pts</small>
           </span>
-          <span className="winner-label">ZWYCIĘZCA</span>
+          <span className="winner-label">WINNER</span>
         </div>
       )}
       <div className="final-ranking">
         <div className="final-ranking-title">
-          <h2>Końcowy ranking</h2>
-          <span>{room.ranking.length} graczy</span>
+          <h2>Final leaderboard</h2>
+          <span>{room.ranking.length} players</span>
         </div>
         {room.ranking.map((player, index) => (
           <div
@@ -44,12 +44,12 @@ export default function FinishedScreen({ room, onHome }) {
               {player.name.slice(0, 1).toUpperCase()}
             </span>
             <strong>{player.name}</strong>
-            <span className="final-score">{player.score} pkt</span>
+            <span className="final-score">{player.score} pts</span>
           </div>
         ))}
       </div>
       <button className="button button-primary" onClick={onHome} type="button">
-        Zagraj ponownie <span>→</span>
+        Play again <span>→</span>
       </button>
     </section>
   );
