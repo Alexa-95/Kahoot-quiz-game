@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { io as createSocket } from 'socket.io-client';
-import { httpServer, io } from '../server.js';
+import { game, httpServer, io } from '../server.js';
 
 function waitForEvent(socket, eventName) {
   return new Promise((resolve) => socket.once(eventName, resolve));
@@ -22,6 +22,32 @@ function emitWithAck(socket, eventName, payload) {
   return new Promise((resolve) => socket.emit(eventName, payload, resolve));
 }
 
+let fakeQuestionNumber = 0;
+
+async function withFakeClaude(action) {
+  const previousKey = process.env.ANTHROPIC_API_KEY;
+  const previousFetch = globalThis.fetch;
+  process.env.ANTHROPIC_API_KEY = 'test-key';
+  globalThis.fetch = async () => new Response(JSON.stringify({
+      content: [{
+        type: 'tool_use',
+        name: 'submit_question',
+        input: {
+          text: `Wygenerowane pytanie numer ${++fakeQuestionNumber}?`,
+          options: ['Pierwsza', 'Druga', 'Trzecia', 'Czwarta'],
+          correctIndex: 2
+        }
+      }]
+    }), { status: 200, headers: { 'content-type': 'application/json' } });
+  try {
+    return await action();
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (previousKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = previousKey;
+  }
+}
+
 test('host and player stay in sync over Socket.IO without leaking answers', async (context) => {
   await new Promise((resolve) => httpServer.listen(0, '127.0.0.1', 1, () => resolve()));
   const address = httpServer.address();
@@ -40,7 +66,7 @@ test('host and player stay in sync over Socket.IO without leaking answers', asyn
   await Promise.all([waitForEvent(host, 'connect'), waitForEvent(player, 'connect')]);
 
   const initialHostState = waitForRoomState(host, (state) => state.phase === 'lobby');
-  const created = await emitWithAck(host, 'host:create', { questionCount: 10 });
+  const created = await withFakeClaude(() => emitWithAck(host, 'host:create', { questionCount: 10 }));
   roomCode = created.code;
   assert.equal(created.ok, true);
   const lobbyState = await initialHostState;
@@ -74,6 +100,14 @@ test('host and player stay in sync over Socket.IO without leaking answers', asyn
   const playerState = await playerAnswerState;
   assert.equal(playerState.hasAnswered, true);
   assert.equal(playerState.question.correctIndex, null);
+
+  game.reveal(created.code);
+  const nextHostQuestion = waitForRoomState(host, (state) => state.phase === 'question' && state.currentIndex === 1);
+  const nextPlayerQuestion = waitForRoomState(player, (state) => state.phase === 'question' && state.currentIndex === 1);
+  const nextQuestion = await withFakeClaude(() => emitWithAck(host, 'quiz:next', { code: created.code }));
+  assert.equal(nextQuestion.ok, true);
+  assert.equal((await nextHostQuestion).question.correctIndex, null);
+  assert.equal((await nextPlayerQuestion).question.correctIndex, null);
 
   const playerClosed = waitForEvent(player, 'room:closed');
   assert.equal((await emitWithAck(host, 'room:leave', { code: created.code })).ok, true);

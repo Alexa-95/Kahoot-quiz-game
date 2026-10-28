@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Lokalny quiz na żywo dla wielu graczy",
   "scripts": {
-    "dev": "node --watch server.js",
+    "dev": "nodemon --watch server.js --watch src --watch scripts --watch client --watch vite.config.js --ext js,jsx,html,css,json scripts/dev-server.js",
+    "build": "vite build",
+    "prestart": "npm run build",
     "start": "node server.js",
     "test": "node --test",
     "typecheck": "tsc --noEmit",
@@ -14,13 +16,17 @@
   "dependencies": {
     "express": "^5.1.0",
     "qrcode": "^1.5.4",
-    "socket.io": "^4.8.1"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^22.15.30",
     "@types/qrcode": "^1.5.5",
-    "socket.io-client": "^4.8.1",
-    "typescript": "^5.8.3"
+    "nodemon": "^3.1.14",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
   }
 }

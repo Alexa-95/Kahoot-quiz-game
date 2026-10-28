@@ -5,11 +5,12 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "target": "ES2022",
+    "jsx": "react-jsx",
     "lib": ["ES2022", "DOM"],
     "strict": false,
     "noEmit": true,
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["server.js", "src/**/*.js", "public/**/*.js", "public/**/*.d.ts", "test/**/*.js"]
+  "include": ["server.js", "src/**/*.js", "client/**/*.js", "client/**/*.jsx", "test/**/*.js"]
 }

@@ -6,7 +6,7 @@ import path from 'node:path';
 import QRCode from 'qrcode';
 import { Server } from 'socket.io';
 import { GameManager } from './src/game.js';
-import { createRandomQuiz } from './src/question-pool.js';
+import { generateQuestion, QUESTION_COUNTS } from './src/question-generator.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const app = express();
@@ -14,8 +14,7 @@ export const httpServer = createServer(app);
 export const io = new Server(httpServer);
 export const game = new GameManager();
 const questionTimers = new Map();
-
-app.use(express.static(path.join(__dirname, 'public')));
+const generatingQuestions = new Set();
 
 app.get('/api/qr/:code', async (request, response) => {
   const code = request.params.code.toUpperCase();
@@ -34,9 +33,14 @@ app.get('/api/qr/:code', async (request, response) => {
 });
 
 io.on('connection', (socket) => {
-  socket.on('host:create', (payload, acknowledge) => {
+  socket.on('host:create', async (payload, acknowledge) => {
     try {
-      const room = game.createRoom(socket.id, createRandomQuiz(payload?.questionCount));
+      if (!QUESTION_COUNTS.includes(payload?.questionCount)) {
+        throw new Error(`Wybierz liczbę pytań: ${QUESTION_COUNTS.join(', ')}.`);
+      }
+      const question = await generateQuestion();
+      if (!socket.connected) throw new Error('Połączenie z prowadzącym zostało przerwane.');
+      const room = game.createRoom(socket.id, { title: 'Quiz z Claude', questions: [question] }, payload.questionCount);
       socket.join(room.code);
       socket.data.role = 'host';
       socket.data.roomCode = room.code;
@@ -113,15 +117,39 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('quiz:next', (payload, acknowledge) => {
+  socket.on('quiz:next', async (payload, acknowledge) => {
+    const code = payload?.code;
+    let generating = false;
     try {
-      const room = game.nextQuestion(payload?.code, socket.id);
+      const currentRoom = game.requireHost(code, socket.id);
+      if (currentRoom.phase !== 'reveal') throw new Error('Poczekaj na zakończenie pytania.');
+      if (currentRoom.currentIndex === currentRoom.totalQuestions - 1) {
+        const room = game.nextQuestion(code, socket.id);
+        clearQuestionTimer(room.code);
+        acknowledge?.({ ok: true });
+        publish(room);
+        return;
+      }
+      if (generatingQuestions.has(code)) throw new Error('Pytanie jest już generowane.');
+      generatingQuestions.add(code);
+      generating = true;
+      const roomSnapshot = currentRoom;
+      const questionIndex = currentRoom.currentIndex;
+      const question = await generateQuestion({
+        avoidQuestions: currentRoom.questions.map((existingQuestion) => existingQuestion.text)
+      });
+      if (game.requireHost(code, socket.id) !== roomSnapshot || roomSnapshot.currentIndex !== questionIndex) {
+        throw new Error('Stan quizu zmienił się podczas generowania pytania. Spróbuj ponownie.');
+      }
+      const room = game.addNextQuestion(code, socket.id, question);
       if (room.phase === 'question') scheduleReveal(room);
       else clearQuestionTimer(room.code);
       acknowledge?.({ ok: true });
       publish(room);
     } catch (error) {
       acknowledge?.({ ok: false, error: errorMessage(error) });
+    } finally {
+      if (generating) generatingQuestions.delete(code);
     }
   });
 
@@ -209,7 +237,20 @@ function errorMessage(error) {
   return error instanceof Error ? error.message : 'Wystąpił nieoczekiwany błąd.';
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
+if (process.env.NODE_ENV === 'development') {
+  const { createServer: createViteServer } = await import('vite');
+  const vite = await createViteServer({
+    configFile: path.join(__dirname, 'vite.config.js'),
+    server: { middlewareMode: true, hmr: { server: httpServer } }
+  });
+  app.use(vite.middlewares);
+  httpServer.on('close', () => void vite.close());
+} else {
+  app.use(express.static(path.join(__dirname, 'public', 'build')));
+}
+
+if (process.env.NODE_ENV === 'development'
+  || (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url)))) {
   const port = Number(process.env.PORT) || 3000;
   httpServer.listen(port, '0.0.0.0', () => {
     console.log(`Quiz Live działa: http://localhost:${port}`);

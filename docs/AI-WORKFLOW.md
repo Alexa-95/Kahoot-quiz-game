@@ -2,7 +2,7 @@
 
 ## Rola AI w projekcie
 
-Quiz Live nie wysyła promptów ani danych graczy do modelu. Claude Code jest narzędziem używanym podczas pracy nad kodem, a nie zależnością aplikacji. Klon projektu nie wymaga klucza API, konta ani skonfigurowanego modelu.
+Claude Code pozostaje narzędziem używanym podczas pracy nad kodem. Niezależnie od tego aplikacja wysyła do Anthropic API prompt z prośbą o kolejne pytanie quizowe; nie wysyła nicków, odpowiedzi ani wyników graczy. Klucz `ANTHROPIC_API_KEY` jest wymagany do tworzenia pokoi i musi być skonfigurowany wyłącznie na serwerze.
 
 ## Jak pracować nad zmianami
 
@@ -19,4 +19,4 @@ Quiz Live nie wysyła promptów ani danych graczy do modelu. Claude Code jest na
 - Snapshot pytania nie może zawierać prawidłowej odpowiedzi przed zakończeniem rundy.
 - Testy powinny sprawdzać przejścia stanu, a nie tylko pojedyncze handlery zdarzeń.
 - Pokoje są ulotne: stan gry znajduje się w pamięci i znika po restarcie procesu.
-- Pytania pochodzą z `src/question-pool.js`; host wybiera jedynie liczbę pytań, a serwer losuje unikalną próbkę i miesza kolejność odpowiedzi bez API AI.
+- Pytania generuje `src/question-generator.js` na początku quizu i po każdej rundzie; serwer waliduje je, prosi o unikanie wcześniejszych pytań i miesza kolejność odpowiedzi.
